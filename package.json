@@ -1,0 +1,29 @@
+{
+  "name": "farmgrid-monorepo",
+  "version": "1.0.0",
+  "description": "FarmGrid - Agricultural Resource Coordination Under Scarcity",
+  "private": true,
+  "scripts": {
+    "install:all": "npm --prefix server install && npm --prefix client install",
+    "dev": "concurrently \"npm --prefix server run dev\" \"npm --prefix client run dev\"",
+    "dev:server": "npm --prefix server run dev",
+    "dev:client": "npm --prefix client run dev",
+    "seed": "npm --prefix server run seed",
+    "test": "node server/tests/algorithms.test.js && node server/tests/api.test.js",
+    "test:algorithms": "node server/tests/algorithms.test.js",
+    "test:api": "node server/tests/api.test.js",
+    "build": "npm --prefix client run build"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.2"
+  },
+  "keywords": [
+    "agriculture",
+    "resource-allocation",
+    "priority-engine",
+    "offline-first",
+    "hackathon"
+  ],
+  "author": "FarmGrid Team",
+  "license": "MIT"
+}

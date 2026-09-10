@@ -1,0 +1,161 @@
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id           Int               @id @default(autoincrement())
+  name         String
+  email        String            @unique
+  passwordHash String
+  role         String            @default("FARMER") // FARMER, OWNER, ADMIN
+  phone        String?
+  farms        Farm[]
+  resources    Resource[]
+  requests     ResourceRequest[]
+  notifications Notification[]
+  createdAt    DateTime          @default(now())
+  updatedAt    DateTime          @updatedAt
+
+  @@index([role])
+}
+
+model Farm {
+  id        Int               @id @default(autoincrement())
+  farmerId  Int
+  name      String
+  latitude  Float
+  longitude Float
+  address   String?
+  crop      String
+  cropStage String            @default("VEGETATIVE") // SEEDLING, VEGETATIVE, FLOWERING, PEAK_RIPENING, HARVEST
+  cropArea  Float             @default(1.0)
+  farmer    User              @relation(fields: [farmerId], references: [id], onDelete: Cascade)
+  requests  ResourceRequest[]
+  createdAt DateTime          @default(now())
+
+  @@index([farmerId])
+}
+
+model Resource {
+  id                Int          @id @default(autoincrement())
+  ownerId           Int
+  name              String
+  type              String       // TRACTOR, HARVESTER, TILLER, SEEDER, PUMP, DRIP_LINE, SPRINKLER, STORAGE, MINI_TRUCK, TRAILER, GRAIN_CART, LABOUR_TEAM, DRONE_SPRAYER, SOIL_TESTING, GRAFTING
+  description       String?      @db.Text
+  latitude          Float
+  longitude         Float
+  status            String       @default("AVAILABLE") // AVAILABLE, BOOKED, MAINTENANCE, UNAVAILABLE
+  maintenanceStatus String       @default("NORMAL")    // NORMAL, SCHEDULED, IN_PROGRESS
+  operatingStart    String       @default("06:00")
+  operatingEnd      String       @default("20:00")
+  operatorRequired  Boolean      @default(false)
+  fuelRequirement   String       @default("DIESEL")
+  owner             User         @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  bookings          Booking[]
+  disruptions       Disruption[]
+  createdAt         DateTime     @default(now())
+  updatedAt         DateTime     @updatedAt
+
+  @@index([type])
+  @@index([status])
+}
+
+model ResourceRequest {
+  id                  Int             @id @default(autoincrement())
+  farmerId            Int
+  farmId              Int
+  resourceType        String
+  preferredResourceId Int?
+  earliestStart       DateTime
+  latestEnd           DateTime
+  durationMinutes     Int
+  urgencyLevel        String          @default("MEDIUM") // LOW, MEDIUM, HIGH, CRITICAL
+  urgencyReason       String?         @db.Text
+  cropStage           String          @default("VEGETATIVE") // SEEDLING, VEGETATIVE, FLOWERING, PEAK_RIPENING, HARVEST
+  weatherRisk         String          @default("LOW")        // LOW, MEDIUM, HIGH, CRITICAL
+  status              String          @default("PENDING")    // PENDING, SCHEDULED, CONFLICT, WAITLIST, COMPLETED, CANCELLED
+  priorityScore       Float           @default(0)
+  farmer              User            @relation(fields: [farmerId], references: [id], onDelete: Cascade)
+  farm                Farm            @relation(fields: [farmId], references: [id], onDelete: Cascade)
+  booking             Booking?
+  priorityScores      PriorityScore[]
+  createdAt           DateTime        @default(now())
+  updatedAt           DateTime        @updatedAt
+
+  @@index([farmerId])
+  @@index([status])
+  @@index([resourceType])
+}
+
+model Booking {
+  id                    Int             @id @default(autoincrement())
+  requestId             Int             @unique
+  resourceId            Int
+  startTime             DateTime
+  endTime               DateTime
+  bufferBeforeMinutes   Int             @default(15)
+  bufferAfterMinutes    Int             @default(15)
+  travelMinutes         Int             @default(0)
+  status                String          @default("ACTIVE") // ACTIVE, CANCELLED, DISRUPTED, COMPLETED
+  allocationExplanation String?         @db.Text
+  request               ResourceRequest @relation(fields: [requestId], references: [id], onDelete: Cascade)
+  resource              Resource        @relation(fields: [resourceId], references: [id], onDelete: Cascade)
+  createdAt             DateTime        @default(now())
+  updatedAt             DateTime        @updatedAt
+
+  @@index([resourceId])
+  @@index([status])
+  @@index([startTime, endTime])
+}
+
+model PriorityScore {
+  id                      Int             @id @default(autoincrement())
+  requestId               Int
+  urgencyScore            Float
+  weatherScore            Float
+  cropReadinessScore      Float
+  waitingScore            Float
+  distanceScore           Float
+  resourceConstraintScore Float
+  totalScore              Float
+  explanation             String          @db.Text
+  request                 ResourceRequest @relation(fields: [requestId], references: [id], onDelete: Cascade)
+  createdAt               DateTime        @default(now())
+
+  @@index([requestId])
+}
+
+model Disruption {
+  id          Int       @id @default(autoincrement())
+  resourceId  Int
+  type        String    // BREAKDOWN, WEATHER, DELAY, CANCELLATION
+  title       String
+  description String?   @db.Text
+  startTime   DateTime
+  endTime     DateTime?
+  severity    String    @default("HIGH") // LOW, MEDIUM, HIGH, CRITICAL
+  status      String    @default("ACTIVE") // ACTIVE, RESOLVED
+  resource    Resource  @relation(fields: [resourceId], references: [id], onDelete: Cascade)
+  createdAt   DateTime  @default(now())
+
+  @@index([resourceId])
+  @@index([status])
+}
+
+model Notification {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  title     String
+  message   String   @db.Text
+  type      String   @default("INFO") // INFO, SUCCESS, WARNING, ALERT
+  read      Boolean  @default(false)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+}
