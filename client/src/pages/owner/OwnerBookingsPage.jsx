@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import api from '../../services/api';
+import OperatorTrackingConsole from '../../components/OperatorTrackingConsole';
 import {
   Calendar,
   Clock,
@@ -10,12 +11,15 @@ import {
   CheckCircle2,
   RefreshCw,
   PlusCircle,
-  AlertTriangle
+  AlertTriangle,
+  Navigation,
+  Radio
 } from 'lucide-react';
 
 export default function OwnerBookingsPage() {
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [activeConsoleBookingId, setActiveConsoleBookingId] = useState(null);
 
   const loadBookings = async () => {
     try {
@@ -132,6 +136,16 @@ export default function OwnerBookingsPage() {
                       {start.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} –{' '}
                       {end.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                     </div>
+                    <div className="mt-2">
+                      <button
+                        type="button"
+                        onClick={() => setActiveConsoleBookingId(b.id)}
+                        className="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold shadow-xs transition"
+                      >
+                        <Navigation className="w-3.5 h-3.5" />
+                        <span>GPS Dispatch Console</span>
+                      </button>
+                    </div>
                   </div>
                 </div>
 
@@ -173,6 +187,18 @@ export default function OwnerBookingsPage() {
               </div>
             );
           })}
+        </div>
+      )}
+
+      {/* Operator Live Dispatch & Tracking Console Modal */}
+      {activeConsoleBookingId && (
+        <div className="fixed inset-0 z-[1500] bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto">
+          <div className="max-w-5xl w-full my-8 animate-scaleUp">
+            <OperatorTrackingConsole
+              bookingId={activeConsoleBookingId}
+              onClose={() => setActiveConsoleBookingId(null)}
+            />
+          </div>
         </div>
       )}
     </div>

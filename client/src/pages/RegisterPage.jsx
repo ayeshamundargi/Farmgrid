@@ -1,10 +1,13 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { useLanguage } from '../context/LanguageContext';
+import LanguageSwitcher from '../components/LanguageSwitcher';
 import { Tractor, ArrowRight, AlertCircle } from 'lucide-react';
 
 export default function RegisterPage() {
   const { register } = useAuth();
+  const { t } = useLanguage();
   const navigate = useNavigate();
 
   const [name, setName] = useState('');
@@ -34,12 +37,16 @@ export default function RegisterPage() {
   return (
     <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
       <div className="max-w-md w-full bg-white rounded-2xl shadow-xl border border-slate-200 p-8 space-y-6">
+        <div className="flex justify-end">
+          <LanguageSwitcher variant="navbar" />
+        </div>
+
         <div className="text-center space-y-1.5">
           <div className="w-12 h-12 rounded-xl bg-agri-600 text-white flex items-center justify-center mx-auto shadow-md shadow-agri-600/30">
             <Tractor className="w-7 h-7" />
           </div>
-          <h2 className="text-2xl font-black text-slate-900 tracking-tight">Create FarmGrid Account</h2>
-          <p className="text-xs text-slate-500">Join the agricultural resource coordination network</p>
+          <h2 className="text-2xl font-black text-slate-900 tracking-tight">{t('auth.signUpTitle')}</h2>
+          <p className="text-xs text-slate-500">{t('auth.signUpSubtitle')}</p>
         </div>
 
         {error && (
@@ -51,19 +58,19 @@ export default function RegisterPage() {
 
         <form onSubmit={handleSubmit} className="space-y-3.5">
           <div>
-            <label className="block text-xs font-semibold text-slate-700 mb-1">Full Name</label>
+            <label className="block text-xs font-semibold text-slate-700 mb-1">{t('auth.fullNameLabel')}</label>
             <input
               type="text"
               required
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="e.g. Ramesh Kumar"
+              placeholder={t('auth.fullNamePlaceholder')}
               className="w-full px-3 py-2 rounded-lg border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-agri-500 transition"
             />
           </div>
 
           <div>
-            <label className="block text-xs font-semibold text-slate-700 mb-1">Email Address</label>
+            <label className="block text-xs font-semibold text-slate-700 mb-1">{t('auth.emailLabel')}</label>
             <input
               type="email"
               required
@@ -75,12 +82,12 @@ export default function RegisterPage() {
           </div>
 
           <div>
-            <label className="block text-xs font-semibold text-slate-700 mb-1">Account Role</label>
+            <label className="block text-xs font-semibold text-slate-700 mb-1">{t('auth.roleLabel')}</label>
             <div className="grid grid-cols-3 gap-2">
               {[
-                { id: 'FARMER', label: 'Farmer' },
-                { id: 'OWNER', label: 'Owner' },
-                { id: 'ADMIN', label: 'Admin' }
+                { id: 'FARMER', label: t('nav.farmerRole') },
+                { id: 'OWNER', label: t('nav.ownerRole') },
+                { id: 'ADMIN', label: t('nav.adminRole') }
               ].map((r) => (
                 <button
                   key={r.id}
@@ -95,18 +102,18 @@ export default function RegisterPage() {
           </div>
 
           <div>
-            <label className="block text-xs font-semibold text-slate-700 mb-1">Phone Number (Optional)</label>
+            <label className="block text-xs font-semibold text-slate-700 mb-1">{t('auth.phoneLabel')}</label>
             <input
               type="text"
               value={phone}
               onChange={(e) => setPhone(e.target.value)}
-              placeholder="+91 98765 43210"
+              placeholder={t('auth.phonePlaceholder')}
               className="w-full px-3 py-2 rounded-lg border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-agri-500 transition"
             />
           </div>
 
           <div>
-            <label className="block text-xs font-semibold text-slate-700 mb-1">Password</label>
+            <label className="block text-xs font-semibold text-slate-700 mb-1">{t('auth.passwordLabel')}</label>
             <input
               type="password"
               required
@@ -122,15 +129,15 @@ export default function RegisterPage() {
             disabled={loading}
             className="w-full py-2.5 px-4 bg-agri-600 hover:bg-agri-700 text-white font-bold text-sm rounded-lg shadow-sm transition flex items-center justify-center gap-2 disabled:opacity-50 mt-4"
           >
-            {loading ? 'Creating Account...' : 'Register'}
+            {loading ? t('auth.creatingAccount') : t('auth.createAccountBtn')}
             <ArrowRight className="w-4 h-4" />
           </button>
         </form>
 
         <div className="text-center text-xs text-slate-500">
-          Already registered?{' '}
+          {t('auth.haveAccount')}{' '}
           <Link to="/login" className="text-agri-700 font-bold hover:underline">
-            Sign in
+            {t('auth.loginHere')}
           </Link>
         </div>
       </div>

@@ -13,6 +13,7 @@ import FarmerDashboard from './pages/farmer/FarmerDashboard';
 import FarmerRequestPage from './pages/farmer/FarmerRequestPage';
 import FarmerRequestsPage from './pages/farmer/FarmerRequestsPage';
 import FarmerSchedulePage from './pages/farmer/FarmerSchedulePage';
+import FarmerTrackingPage from './pages/farmer/FarmerTrackingPage';
 
 // Owner Pages
 import OwnerDashboard from './pages/owner/OwnerDashboard';
@@ -100,6 +101,22 @@ export default function App() {
             element={
               <ProtectedRoute allowedRoles={['FARMER', 'ADMIN']}>
                 <FarmerSchedulePage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/farmer/tracking"
+            element={
+              <ProtectedRoute allowedRoles={['FARMER', 'ADMIN']}>
+                <FarmerTrackingPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/farmer/tracking/:bookingId"
+            element={
+              <ProtectedRoute allowedRoles={['FARMER', 'ADMIN']}>
+                <FarmerTrackingPage />
               </ProtectedRoute>
             }
           />

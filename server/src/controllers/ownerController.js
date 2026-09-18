@@ -195,11 +195,14 @@ async function setMaintenanceStatus(req, res, next) {
     const { id } = req.params;
     const { maintenanceStatus, status } = req.body;
 
+    const targetMaintenance = maintenanceStatus || 'IN_PROGRESS';
+    const targetStatus = status || (targetMaintenance === 'NORMAL' ? 'AVAILABLE' : 'MAINTENANCE');
+
     const resource = await prisma.resource.update({
       where: { id: parseInt(id) },
       data: {
-        maintenanceStatus: maintenanceStatus || 'IN_PROGRESS',
-        status: status || 'MAINTENANCE'
+        maintenanceStatus: targetMaintenance,
+        status: targetStatus
       }
     });
 
@@ -220,7 +223,8 @@ async function setMaintenanceStatus(req, res, next) {
 async function reportBreakdown(req, res, next) {
   try {
     const { id } = req.params;
-    const { title = 'Equipment Mechanical Breakdown', description = 'Reported field failure during operation' } = req.body;
+    const { title = 'Equipment Mechanical Breakdown', description, reason } = req.body;
+    const breakdownDesc = description || reason || 'Reported field failure during operation';
 
     // Create disruption record
     const disruption = await prisma.disruption.create({
@@ -228,12 +232,13 @@ async function reportBreakdown(req, res, next) {
         resourceId: parseInt(id),
         type: 'BREAKDOWN',
         title,
-        description,
+        description: breakdownDesc,
         startTime: new Date(),
         severity: 'CRITICAL',
         status: 'ACTIVE'
       }
     });
+
 
     // Run dynamic reallocation engine
     const io = getIO();

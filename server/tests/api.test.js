@@ -1,11 +1,33 @@
 const http = require('http');
 const { app, server } = require('../src/server');
 
+function checkServerRunning(port) {
+  return new Promise((resolve) => {
+    const req = http.get(`http://localhost:${port}/api/health`, (res) => {
+      resolve(true);
+    });
+    req.on('error', () => resolve(false));
+    req.setTimeout(1000, () => {
+      req.destroy();
+      resolve(false);
+    });
+  });
+}
+
 async function main() {
   const PORT = process.env.PORT || 5000;
+  const isAlreadyRunning = await checkServerRunning(PORT);
+
+  if (!isAlreadyRunning) {
+    await new Promise((resolve) => {
+      server.listen(PORT, resolve);
+    });
+  }
+
   console.log(`\n========================================`);
   console.log(`FARMGRID END-TO-END API TEST RUNNER`);
   console.log(`========================================`);
+
 
   async function postJson(endpoint, body, token) {
     return new Promise((resolve, reject) => {
@@ -110,7 +132,9 @@ async function main() {
   console.log('\n========================================');
   console.log('API VERIFICATION: 8/8 PASSED');
   console.log('========================================\n');
-  server.close();
+  if (!isAlreadyRunning) {
+    server.close();
+  }
   process.exit(0);
 }
 

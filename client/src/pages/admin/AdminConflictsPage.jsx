@@ -140,20 +140,25 @@ export default function AdminConflictsPage() {
                 Direct Time Overlaps ({bookingConflicts.length})
               </h3>
               <div className="space-y-4">
-                {bookingConflicts.map((c, idx) => (
-                  <ConflictCard
-                    key={idx}
-                    resourceName={c.booking1?.resource?.name || 'Assigned Machinery'}
-                    existingBooking={`${new Date(c.booking1?.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} – ${new Date(c.booking1?.endTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`}
-                    requestedWindow={`${new Date(c.booking2?.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} – ${new Date(c.booking2?.endTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`}
-                    suggestedAlternative={{
-                      resourceName: 'Alternate Regional Unit (Ready)',
-                      timeWindow: 'Offset by +60m',
-                      distanceKm: 4.2
-                    }}
-                    onResolve={handleResolveAll}
-                  />
-                ))}
+                {bookingConflicts.map((c, idx) => {
+                  const bA = c.bookingA || c.booking1;
+                  const bB = c.bookingB || c.booking2;
+                  return (
+                    <ConflictCard
+                      key={idx}
+                      resourceName={bA?.resource?.name || 'Assigned Machinery'}
+                      existingBooking={bA?.startTime ? `${new Date(bA.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} – ${new Date(bA.endTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}` : '10:00 – 13:00'}
+                      requestedWindow={bB?.startTime ? `${new Date(bB.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} – ${new Date(bB.endTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}` : '12:00 – 15:00'}
+                      suggestedAlternative={{
+                        resourceName: 'Alternate Regional Unit (Ready)',
+                        timeWindow: 'Offset by +60m',
+                        distanceKm: 4.2
+                      }}
+                      onResolve={handleResolveAll}
+                    />
+                  );
+                })}
+
               </div>
             </div>
           )}

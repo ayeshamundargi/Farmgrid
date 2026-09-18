@@ -10,6 +10,7 @@ async function main() {
   // Clean existing records in correct relation order
   await prisma.notification.deleteMany();
   await prisma.disruption.deleteMany();
+  await prisma.tractorLocation.deleteMany();
   await prisma.priorityScore.deleteMany();
   await prisma.booking.deleteMany();
   await prisma.resourceRequest.deleteMany();
@@ -298,6 +299,23 @@ async function main() {
     }
   });
 
+  // Seed live tracking state for Booking A (Farmer Ramesh Kumar's morning tractor dispatch)
+  await prisma.tractorLocation.create({
+    data: {
+      bookingId: bookingA.id,
+      resourceId: tractor1.id,
+      latitude: 12.5208,
+      longitude: 76.8925,
+      status: 'ON_THE_WAY',
+      otp: '4821',
+      isOtpVerified: false,
+      distanceRemaining: 0.35,
+      estimatedMinutes: 2,
+      heading: 52.0,
+      speed: 24.0
+    }
+  });
+
   // Request B: Also competed for Tractor-01 at 08:00, allocated to Tractor-01 in afternoon or Tractor-02
   const reqB = await prisma.resourceRequest.create({
     data: {
@@ -348,6 +366,22 @@ async function main() {
       travelMinutes: 12,
       status: 'ACTIVE',
       allocationExplanation: `Farmer B allocated ${tractor1.name} at 12:30 PM after Farmer A completes operation and buffer window clears.`
+    }
+  });
+
+  await prisma.tractorLocation.create({
+    data: {
+      bookingId: bookingB.id,
+      resourceId: tractor1.id,
+      latitude: 12.5200,
+      longitude: 76.8900,
+      status: 'ASSIGNED',
+      otp: '7392',
+      isOtpVerified: false,
+      distanceRemaining: 2.8,
+      estimatedMinutes: 9,
+      heading: 0,
+      speed: 0
     }
   });
 

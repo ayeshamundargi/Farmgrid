@@ -55,6 +55,30 @@ export function SocketProvider({ children }) {
       window.dispatchEvent(new CustomEvent('farmgrid_resource_status_changed', { detail: data }));
     });
 
+    newSocket.on('tractorLocationUpdated', (data) => {
+      console.log('[Socket.IO Client] Event: tractorLocationUpdated', data);
+      setLastEvent({ type: 'tractorLocationUpdated', data, time: new Date() });
+      window.dispatchEvent(new CustomEvent('farmgrid_tractor_location_updated', { detail: data }));
+    });
+
+    newSocket.on('trackingStatusChanged', (data) => {
+      console.log('[Socket.IO Client] Event: trackingStatusChanged', data);
+      setLastEvent({ type: 'trackingStatusChanged', data, time: new Date() });
+      window.dispatchEvent(new CustomEvent('farmgrid_tracking_status_changed', { detail: data }));
+    });
+
+    newSocket.on('trackingOtpVerified', (data) => {
+      console.log('[Socket.IO Client] Event: trackingOtpVerified', data);
+      setLastEvent({ type: 'trackingOtpVerified', data, time: new Date() });
+      window.dispatchEvent(new CustomEvent('farmgrid_tracking_otp_verified', { detail: data }));
+    });
+
+    newSocket.on('notification', (data) => {
+      console.log('[Socket.IO Client] Event: notification', data);
+      setNotifications((prev) => [data, ...prev.slice(0, 9)]);
+      window.dispatchEvent(new CustomEvent('farmgrid_notification_received', { detail: data }));
+    });
+
     setSocket(newSocket);
 
     return () => {

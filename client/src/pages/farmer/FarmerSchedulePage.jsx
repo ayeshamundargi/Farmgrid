@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import api from '../../services/api';
+import { useLanguage } from '../../context/LanguageContext';
 import {
   Calendar,
   Clock,
@@ -13,10 +14,12 @@ import {
   PlusCircle,
   Truck,
   ShieldCheck,
-  AlertCircle
+  AlertCircle,
+  Navigation
 } from 'lucide-react';
 
 export default function FarmerSchedulePage() {
+  const { t, translateStatus, translateEquipment, isKannada } = useLanguage();
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -58,13 +61,13 @@ export default function FarmerSchedulePage() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <span className="text-xs font-bold uppercase tracking-wider text-agri-600 block mb-1">
-            Guaranteed Operational Windows
+            {t('farmerSchedule.pageBadge')}
           </span>
           <h1 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">
-            My Equipment Schedule
+            {t('farmerSchedule.pageTitle')}
           </h1>
           <p className="text-xs text-slate-500 mt-1">
-            Confirmed equipment slots with transit buffers, operator specifications, and owner dispatch details.
+            {t('farmerSchedule.pageDesc')}
           </p>
         </div>
 
@@ -72,7 +75,7 @@ export default function FarmerSchedulePage() {
           <button
             onClick={loadSchedule}
             className="p-2.5 rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-50 transition"
-            title="Refresh"
+            title={t('common.retry')}
           >
             <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
           </button>
@@ -81,7 +84,7 @@ export default function FarmerSchedulePage() {
             className="flex items-center gap-1.5 px-4 py-2.5 bg-agri-600 hover:bg-agri-700 text-white text-xs font-bold rounded-xl shadow-sm transition"
           >
             <PlusCircle className="w-4 h-4" />
-            Book More Equipment
+            {t('farmerSchedule.requestResourceNow')}
           </Link>
         </div>
       </div>
@@ -89,21 +92,21 @@ export default function FarmerSchedulePage() {
       {loading ? (
         <div className="text-center py-16 text-slate-400 text-sm">
           <RefreshCw className="w-6 h-6 animate-spin mx-auto mb-2 text-agri-600" />
-          Loading your confirmed equipment slots...
+          {t('common.loading')}
         </div>
       ) : bookings.length === 0 ? (
         <div className="bg-white rounded-2xl border border-slate-200 p-12 text-center text-slate-400 space-y-3">
           <Calendar className="w-12 h-12 mx-auto text-slate-300" />
-          <h3 className="text-base font-bold text-slate-700">No Confirmed Bookings Yet</h3>
+          <h3 className="text-base font-bold text-slate-700">{t('farmerSchedule.noBookingsTitle')}</h3>
           <p className="text-xs max-w-md mx-auto text-slate-500">
-            Submit a resource request to secure high-priority allocation slots during your peak harvesting or tilling window.
+            {t('farmerSchedule.noBookingsDesc')}
           </p>
           <Link
             to="/farmer/request"
             className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-bold text-white bg-agri-600 rounded-lg hover:bg-agri-700 shadow-sm transition"
           >
             <PlusCircle className="w-4 h-4" />
-            Request Equipment Now
+            {t('farmerSchedule.requestResourceNow')}
           </Link>
         </div>
       ) : (
@@ -129,23 +132,32 @@ export default function FarmerSchedulePage() {
                       <div className="flex items-center gap-2">
                         <h3 className="font-bold text-base text-slate-900">{resource.name || 'Resource'}</h3>
                         <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-300 uppercase">
-                          {booking.status}
+                          {translateStatus(booking.status)}
                         </span>
                       </div>
                       <span className="text-xs text-slate-500">
-                        Type: <strong>{resource.type}</strong> • Fuel: {resource.fuelRequirement || 'Diesel'}
+                        {isKannada ? 'ವರ್ಗ:' : 'Type:'} <strong>{translateEquipment(resource.type)}</strong> • {isKannada ? 'ಇಂಧನ:' : 'Fuel:'} {resource.fuelRequirement || 'Diesel'}
                       </span>
                     </div>
                   </div>
 
                   <div className="text-right">
-                    <span className="text-xs font-bold text-slate-500 block">Date & Time</span>
+                    <span className="text-xs font-bold text-slate-500 block">{t('common.date')} & {t('common.duration')}</span>
                     <div className="text-sm font-black text-slate-900">
                       {start.toLocaleDateString([], { weekday: 'short', month: 'short', day: 'numeric' })}
                     </div>
                     <div className="text-xs font-bold text-emerald-700">
                       {start.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} –{' '}
                       {end.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                    </div>
+                    <div className="mt-2">
+                      <Link
+                        to={`/farmer/tracking/${booking.id}`}
+                        className="inline-flex items-center gap-1.5 px-3 py-1 bg-agri-600 hover:bg-agri-700 text-white rounded-lg text-xs font-bold shadow-xs transition"
+                      >
+                        <Navigation className="w-3.5 h-3.5" />
+                        <span>{isKannada ? 'ಲೈವ್ ಟ್ರ್ಯಾಕಿಂಗ್' : 'Live Track Tractor'}</span>
+                      </Link>
                     </div>
                   </div>
                 </div>
@@ -156,11 +168,11 @@ export default function FarmerSchedulePage() {
                   <div className="p-3.5 bg-slate-50 rounded-xl border border-slate-100 space-y-1">
                     <span className="text-[10px] font-bold uppercase text-slate-400 flex items-center gap-1">
                       <MapPin className="w-3.5 h-3.5 text-agri-600" />
-                      Destination Parcel
+                      {isKannada ? 'ತಲುಪಬೇಕಾದ ಜಮೀನು' : 'Destination Parcel'}
                     </span>
-                    <div className="font-bold text-slate-800">{farm.name || 'Farm parcel'}</div>
+                    <div className="font-bold text-slate-800">{farm.name || t('farmer.farmParcel')}</div>
                     <div className="text-slate-500 text-[11px]">
-                      {farm.crop} ({farm.cropStage}) • {farm.cropArea} Acres
+                      {farm.crop} ({farm.cropStage}) • {farm.cropArea} {isKannada ? 'ಎಕರೆ' : 'Acres'}
                     </div>
                     <div className="text-[11px] text-slate-400">
                       GPS: {farm.latitude?.toFixed(4)}, {farm.longitude?.toFixed(4)}
@@ -171,17 +183,17 @@ export default function FarmerSchedulePage() {
                   <div className="p-3.5 bg-slate-50 rounded-xl border border-slate-100 space-y-1">
                     <span className="text-[10px] font-bold uppercase text-slate-400 flex items-center gap-1">
                       <Truck className="w-3.5 h-3.5 text-sky-600" />
-                      Transit & Clearance Buffer
+                      {t('farmerSchedule.transitBuffer')}
                     </span>
                     <div className="font-bold text-slate-800">
-                      {booking.travelMinutes || 15} min travel window
+                      {booking.travelMinutes || 15} {t('common.min')} {isKannada ? 'ಸಂಚಾರ ಸಮಯ' : 'travel window'}
                     </div>
                     <div className="text-slate-500 text-[11px]">
-                      Pre-buffer: {booking.bufferBeforeMinutes || 15}m • Post-buffer: {booking.bufferAfterMinutes || 15}m
+                      Pre: {booking.bufferBeforeMinutes || 15}m • Post: {booking.bufferAfterMinutes || 15}m
                     </div>
                     <div className="text-[11px] text-emerald-600 font-semibold flex items-center gap-1">
                       <CheckCircle2 className="w-3 h-3" />
-                      Cleared for field delivery
+                      {isKannada ? 'ರವಾನೆಗೆ ಸಿದ್ಧವಾಗಿದೆ' : 'Cleared for field delivery'}
                     </div>
                   </div>
 
@@ -189,13 +201,13 @@ export default function FarmerSchedulePage() {
                   <div className="p-3.5 bg-slate-50 rounded-xl border border-slate-100 space-y-1">
                     <span className="text-[10px] font-bold uppercase text-slate-400 flex items-center gap-1">
                       <ShieldCheck className="w-3.5 h-3.5 text-amber-600" />
-                      Dispatch & Operator
+                      {t('farmerSchedule.operatorDetails')}
                     </span>
                     <div className="font-bold text-slate-800">
-                      {resource.operatorRequired ? 'Certified Operator Assigned' : 'Self-Operated Equipment'}
+                      {resource.operatorRequired ? (isKannada ? 'ಪ್ರಮಾಣೀಕೃತ ಚಾಲಕರು ನಿಯೋಜಿಸಲಾಗಿದೆ' : 'Certified Operator Assigned') : (isKannada ? 'ಸ್ವಯಂ ಚಾಲಿತ ಉಪಕರಣ' : 'Self-Operated Equipment')}
                     </div>
                     <div className="text-slate-500 text-[11px]">
-                      Owner: {resource.owner?.name || 'Agri Hub Partner'}
+                      {isKannada ? 'ಮಾಲೀಕರು:' : 'Owner:'} {resource.owner?.name || 'Agri Hub Partner'}
                     </div>
                     {resource.owner?.phone && (
                       <div className="text-agri-700 font-bold flex items-center gap-1 text-[11px]">
@@ -209,7 +221,7 @@ export default function FarmerSchedulePage() {
                 {/* Explanation notes */}
                 {booking.allocationExplanation && (
                   <div className="text-xs bg-emerald-50/50 p-3 rounded-xl border border-emerald-100 text-emerald-900">
-                    <span className="font-bold">Algorithmic Allocation Note:</span> {booking.allocationExplanation}
+                    <span className="font-bold">{isKannada ? 'ಅಲ್ಗಾರಿದಮಿಕ್ ಹಂಚಿಕೆ ಟಿಪ್ಪಣಿ:' : 'Algorithmic Allocation Note:'}</span> {booking.allocationExplanation}
                   </div>
                 )}
               </div>

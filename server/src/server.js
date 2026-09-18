@@ -13,6 +13,7 @@ const farmerRoutes = require('./routes/farmerRoutes');
 const ownerRoutes = require('./routes/ownerRoutes');
 const adminRoutes = require('./routes/adminRoutes');
 const resourceRoutes = require('./routes/resourceRoutes');
+const trackingRoutes = require('./routes/trackingRoutes');
 
 const app = express();
 const server = http.createServer(app);
@@ -61,6 +62,7 @@ app.use('/api', farmerRoutes);
 app.use('/api', ownerRoutes);
 app.use('/api/resources', resourceRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api', trackingRoutes);
 
 // 404 handler
 app.use('*', (req, res) => {
@@ -75,10 +77,13 @@ app.use(errorHandler);
 
 const PORT = process.env.PORT || 5000;
 
-server.listen(PORT, () => {
-  console.log(`\n🚜 FarmGrid Server running on http://localhost:${PORT}`);
-  console.log(`📡 Socket.IO initialized on port ${PORT}`);
-  console.log(`🌱 Agricultural Resource Coordination Engine Active\n`);
-});
+if (require.main === module) {
+  server.listen(PORT, () => {
+    console.log(`\n🚜 FarmGrid Server running on http://localhost:${PORT}`);
+    console.log(`📡 Socket.IO initialized on port ${PORT}`);
+    console.log(`🌱 Agricultural Resource Coordination Engine Active\n`);
+  });
+}
 
 module.exports = { app, server };
+

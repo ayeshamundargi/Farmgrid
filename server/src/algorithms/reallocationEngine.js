@@ -81,10 +81,10 @@ async function handleDisruption(disruptionId, prisma, io = null) {
     const allocation = smartAllocateRequest(request, farm, allResources, activeBookings);
 
     if (allocation.allocated) {
-      // Create new booking on alternate resource
-      const newBooking = await prisma.booking.create({
+      // Update existing booking on alternate resource
+      const newBooking = await prisma.booking.update({
+        where: { id: b.id },
         data: {
-          requestId: request.id,
           resourceId: allocation.resource.id,
           startTime: allocation.slot.startTime,
           endTime: allocation.slot.endTime,
@@ -96,6 +96,7 @@ async function handleDisruption(disruptionId, prisma, io = null) {
         },
         include: { resource: true }
       });
+
 
       // Update request status
       await prisma.resourceRequest.update({
@@ -234,19 +235,40 @@ async function handleCancellation(bookingId, prisma, io = null) {
       const allocation = smartAllocateRequest(item.req, item.req.farm, [booking.resource], activeBookings);
 
       if (allocation.allocated) {
-        newBooking = await prisma.booking.create({
-          data: {
-            requestId: item.req.id,
-            resourceId: booking.resource.id,
-            startTime: allocation.slot.startTime,
-            endTime: allocation.slot.endTime,
-            bufferBeforeMinutes: allocation.slot.bufferBeforeMinutes,
-            bufferAfterMinutes: allocation.slot.bufferAfterMinutes,
-            travelMinutes: allocation.slot.travelMinutes,
-            status: 'ACTIVE',
-            allocationExplanation: `Allocated from waitlist after cancellation of booking #${booking.id}: ${allocation.priority.explanation}`
-          }
+        const existingBooking = await prisma.booking.findUnique({
+          where: { requestId: item.req.id }
         });
+
+        if (existingBooking) {
+          newBooking = await prisma.booking.update({
+            where: { id: existingBooking.id },
+            data: {
+              resourceId: booking.resource.id,
+              startTime: allocation.slot.startTime,
+              endTime: allocation.slot.endTime,
+              bufferBeforeMinutes: allocation.slot.bufferBeforeMinutes,
+              bufferAfterMinutes: allocation.slot.bufferAfterMinutes,
+              travelMinutes: allocation.slot.travelMinutes,
+              status: 'ACTIVE',
+              allocationExplanation: `Allocated from waitlist after cancellation of booking #${booking.id}: ${allocation.priority.explanation}`
+            }
+          });
+        } else {
+          newBooking = await prisma.booking.create({
+            data: {
+              requestId: item.req.id,
+              resourceId: booking.resource.id,
+              startTime: allocation.slot.startTime,
+              endTime: allocation.slot.endTime,
+              bufferBeforeMinutes: allocation.slot.bufferBeforeMinutes,
+              bufferAfterMinutes: allocation.slot.bufferAfterMinutes,
+              travelMinutes: allocation.slot.travelMinutes,
+              status: 'ACTIVE',
+              allocationExplanation: `Allocated from waitlist after cancellation of booking #${booking.id}: ${allocation.priority.explanation}`
+            }
+          });
+        }
+
 
         await prisma.resourceRequest.update({
           where: { id: item.req.id },

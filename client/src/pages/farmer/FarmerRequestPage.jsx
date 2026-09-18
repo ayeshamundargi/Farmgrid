@@ -4,6 +4,7 @@ import { useAuth } from '../../context/AuthContext';
 import api from '../../services/api';
 import { saveOfflineRequest } from '../../offline/requestQueue';
 import PriorityBreakdown from '../../components/PriorityBreakdown';
+import { fetchAgriWeather } from '../../services/weatherService';
 import {
   Tractor,
   Calendar,
@@ -70,6 +71,8 @@ export default function FarmerRequestPage() {
   const [urgencyReason, setUrgencyReason] = useState('');
   const [cropStage, setCropStage] = useState('VEGETATIVE');
   const [weatherRisk, setWeatherRisk] = useState('LOW');
+  const [liveWeather, setLiveWeather] = useState(null);
+  const [loadingWeather, setLoadingWeather] = useState(false);
 
   // Submit Result State
   const [submitting, setSubmitting] = useState(false);
@@ -123,9 +126,46 @@ export default function FarmerRequestPage() {
     }
   };
 
+  const detectWeatherForFarm = async (targetFarmId) => {
+    if (!targetFarmId) return;
+    const selected = farms.find((f) => String(f.id) === String(targetFarmId));
+    if (!selected) return;
+    const lat = parseFloat(selected.latitude);
+    const lng = parseFloat(selected.longitude);
+    if (!Number.isFinite(lat) || !Number.isFinite(lng)) return;
+
+    try {
+      setLoadingWeather(true);
+      const data = await fetchAgriWeather(lat, lng);
+      setLiveWeather(data);
+
+      const rainProb = data?.daily?.[0]?.precipitationProbability || 0;
+      const rainSum = data?.daily?.[0]?.precipitationSum || 0;
+      if (rainProb > 70 || rainSum > 10) {
+        setWeatherRisk('CRITICAL');
+      } else if (rainProb > 40 || rainSum > 3) {
+        setWeatherRisk('HIGH');
+      } else if (rainProb > 20 || (data?.current?.precipitation ?? 0) > 0) {
+        setWeatherRisk('MEDIUM');
+      } else {
+        setWeatherRisk('LOW');
+      }
+    } catch (e) {
+      console.warn('Weather auto-detect error:', e);
+    } finally {
+      setLoadingWeather(false);
+    }
+  };
+
   useEffect(() => {
     loadFarms();
   }, []);
+
+  useEffect(() => {
+    if (farmId && farms.length > 0) {
+      detectWeatherForFarm(farmId);
+    }
+  }, [farmId, farms]);
 
   const handleCreateFarm = async (e) => {
     e.preventDefault();
@@ -143,7 +183,14 @@ export default function FarmerRequestPage() {
     e.preventDefault();
     setError(null);
     setResult(null);
+
+    if (!farmId) {
+      setError('Please select or register a target farm parcel before submitting.');
+      return;
+    }
+
     setSubmitting(true);
+
 
     const payload = {
       farmId: parseInt(farmId),
@@ -227,17 +274,21 @@ export default function FarmerRequestPage() {
               </div>
             </div>
 
-            {!result.offline && (
-              <span
-                className={`px-3 py-1 rounded-full text-xs font-black uppercase ${
-                  result.status === 'SCHEDULED'
-                    ? 'bg-emerald-100 text-emerald-800 border border-emerald-300'
-                    : 'bg-amber-100 text-amber-800 border border-amber-300'
-                }`}
-              >
-                {result.status || 'EVALUATED'}
-              </span>
-            )}
+            {!result.offline && (() => {
+              const status = result.request?.status || result.status || 'EVALUATED';
+              return (
+                <span
+                  className={`px-3 py-1 rounded-full text-xs font-black uppercase ${
+                    status === 'SCHEDULED'
+                      ? 'bg-emerald-100 text-emerald-800 border border-emerald-300'
+                      : 'bg-amber-100 text-amber-800 border border-amber-300'
+                  }`}
+                >
+                  {status}
+                </span>
+              );
+            })()}
+
           </div>
 
           {result.offline ? (
@@ -469,10 +520,22 @@ export default function FarmerRequestPage() {
               </div>
 
               <div>
-                <label className="text-xs font-bold text-slate-700 flex items-center gap-1.5 mb-1">
-                  <CloudRain className="w-3.5 h-3.5 text-sky-600" />
-                  Weather Risk Proximity
-                </label>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="text-xs font-bold text-slate-700 flex items-center gap-1.5">
+                    <CloudRain className="w-3.5 h-3.5 text-sky-600" />
+                    Weather Risk Proximity
+                  </label>
+                  <button
+                    type="button"
+                    onClick={() => detectWeatherForFarm(farmId)}
+                    disabled={loadingWeather || !farmId}
+                    className="text-[10px] text-emerald-700 font-bold hover:underline flex items-center gap-1"
+                    title="Fetch live satellite weather to evaluate risk"
+                  >
+                    {loadingWeather ? 'Checking...' : '🔄 Live Auto-Detect'}
+                  </button>
+                </div>
+
                 <select
                   value={weatherRisk}
                   onChange={(e) => setWeatherRisk(e.target.value)}
@@ -484,6 +547,15 @@ export default function FarmerRequestPage() {
                     </option>
                   ))}
                 </select>
+
+                {liveWeather && (
+                  <div className="mt-1 text-[11px] text-slate-500 flex items-center gap-1.5 bg-slate-50 px-2 py-1 rounded border border-slate-200/60">
+                    <span>{liveWeather.current.icon}</span>
+                    <span>
+                      {liveWeather.current.temperature}°C, {liveWeather.current.condition} • Rain Prob: {liveWeather.daily[0]?.precipitationProbability || 0}% • Wind: {liveWeather.current.windSpeed} km/h
+                    </span>
+                  </div>
+                )}
               </div>
             </div>
 

@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import { useLanguage } from '../../context/LanguageContext';
+import LanguageSwitcher from '../../components/LanguageSwitcher';
 import api from '../../services/api';
 import AnalyticsCharts from '../../components/AnalyticsCharts';
 import {
@@ -20,6 +22,7 @@ import {
 } from 'lucide-react';
 
 export default function AdminDashboard() {
+  const { t, isKannada } = useLanguage();
   const [dashboardData, setDashboardData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [reallocating, setReallocating] = useState(false);
@@ -77,14 +80,17 @@ export default function AdminDashboard() {
       {/* Header Banner */}
       <div className="bg-gradient-to-r from-slate-950 via-slate-900 to-agri-950 rounded-2xl p-6 sm:p-8 text-white shadow-xl flex flex-col md:flex-row md:items-center justify-between gap-6 border border-slate-800">
         <div>
-          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-agri-600/30 text-agri-300 border border-agri-500/40 mb-2">
-            👑 Master Coordinator & Algorithmic Dispatch
-          </span>
+          <div className="flex flex-wrap items-center gap-2 mb-2">
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-agri-600/30 text-agri-300 border border-agri-500/40">
+              {t('admin.badge')}
+            </span>
+            <LanguageSwitcher variant="pills" />
+          </div>
           <h1 className="text-2xl sm:text-3xl font-black tracking-tight">
-            Central Resource Coordination Command
+            {t('admin.title')}
           </h1>
           <p className="text-sm text-slate-300 mt-1 max-w-2xl">
-            Real-time algorithmic oversight of regional agricultural machinery, conflict prevention, dynamic reallocations, and fairness scoring.
+            {t('admin.subtitle')}
           </p>
         </div>
 
@@ -96,14 +102,14 @@ export default function AdminDashboard() {
             className="flex items-center gap-2 px-5 py-3 bg-agri-600 hover:bg-agri-700 text-white font-bold text-sm rounded-xl shadow-md transition disabled:opacity-50 transform active:scale-95"
           >
             <Zap className={`w-4 h-4 ${reallocating ? 'animate-spin text-amber-300' : ''}`} />
-            {reallocating ? 'Executing Reallocation...' : 'Run Global Reallocation'}
+            {reallocating ? t('admin.executingReallocation') : t('admin.runGlobalReallocation')}
           </button>
           <Link
             to="/admin/schedule"
             className="flex items-center gap-2 px-4 py-3 bg-white/10 hover:bg-white/20 text-white font-semibold text-sm rounded-xl border border-white/20 transition"
           >
             <Clock className="w-4 h-4 text-agri-300" />
-            Master Timeline
+            {isKannada ? 'ಮಾಸ್ಟರ್ ವೇಳಾಪಟ್ಟಿ' : 'Master Timeline'}
           </Link>
         </div>
       </div>
@@ -124,39 +130,51 @@ export default function AdminDashboard() {
       {/* KPI Cards Grid */}
       <div className="grid grid-cols-2 lg:grid-cols-6 gap-4">
         <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
-          <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Total Fleet</span>
+          <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+            {isKannada ? 'ಒಟ್ಟು ಉಪಕರಣಗಳು' : 'Total Fleet'}
+          </span>
           <div className="text-2xl font-black text-slate-900 mt-1">{summary.totalResources ?? '—'}</div>
-          <span className="text-[11px] text-slate-500 mt-0.5 block">Machinery Units</span>
+          <span className="text-[11px] text-slate-500 mt-0.5 block">{isKannada ? 'ಯಂತ್ರಗಳು' : 'Machinery Units'}</span>
         </div>
 
         <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
-          <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-600">Available</span>
+          <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-600">
+            {isKannada ? 'ಲಭ್ಯವಿದೆ' : 'Available'}
+          </span>
           <div className="text-2xl font-black text-emerald-700 mt-1">{summary.availableResources ?? '—'}</div>
-          <span className="text-[11px] text-emerald-600/80 mt-0.5 block">Ready For Use</span>
+          <span className="text-[11px] text-emerald-600/80 mt-0.5 block">{isKannada ? 'ಬಳಕೆಗೆ ಸಿದ್ಧ' : 'Ready For Use'}</span>
         </div>
 
         <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
-          <span className="text-[10px] font-bold uppercase tracking-wider text-sky-600">Active Bookings</span>
+          <span className="text-[10px] font-bold uppercase tracking-wider text-sky-600">
+            {isKannada ? 'ಸಕ್ರಿಯ ಬುಕಿಂಗ್' : 'Active Bookings'}
+          </span>
           <div className="text-2xl font-black text-sky-700 mt-1">{summary.activeBookings ?? '—'}</div>
-          <span className="text-[11px] text-sky-600/80 mt-0.5 block">Dispatched in Field</span>
+          <span className="text-[11px] text-sky-600/80 mt-0.5 block">{isKannada ? 'ಕ್ಷೇತ್ರದಲ್ಲಿ ನಿಯೋಜಿತ' : 'Dispatched in Field'}</span>
         </div>
 
         <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
-          <span className="text-[10px] font-bold uppercase tracking-wider text-amber-600">In Waitlist</span>
+          <span className="text-[10px] font-bold uppercase tracking-wider text-amber-600">
+            {isKannada ? 'ಕಾಯುವ ಪಟ್ಟಿಯಲ್ಲಿ' : 'In Waitlist'}
+          </span>
           <div className="text-2xl font-black text-amber-600 mt-1">{summary.waitlistedRequests ?? '—'}</div>
-          <span className="text-[11px] text-amber-600/80 mt-0.5 block">Queued by Priority</span>
+          <span className="text-[11px] text-amber-600/80 mt-0.5 block">{isKannada ? 'ಆದ್ಯತೆಯ ಪ್ರಕಾರ' : 'Queued by Priority'}</span>
         </div>
 
         <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
-          <span className="text-[10px] font-bold uppercase tracking-wider text-rose-600">Conflicts</span>
+          <span className="text-[10px] font-bold uppercase tracking-wider text-rose-600">
+            {isKannada ? 'ಸಂಘರ್ಷಗಳು' : 'Conflicts'}
+          </span>
           <div className="text-2xl font-black text-rose-700 mt-1">{summary.activeConflictsCount ?? 0}</div>
-          <span className="text-[11px] text-rose-600/80 mt-0.5 block">Double Bookings Blocked</span>
+          <span className="text-[11px] text-rose-600/80 mt-0.5 block">{isKannada ? 'ತಡೆಹಿಡಿಯಲಾಗಿದೆ' : 'Double Bookings Blocked'}</span>
         </div>
 
         <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
-          <span className="text-[10px] font-bold uppercase tracking-wider text-purple-600">High Priority</span>
+          <span className="text-[10px] font-bold uppercase tracking-wider text-purple-600">
+            {isKannada ? 'ಹೆಚ್ಚಿನ ಆದ್ಯತೆ' : 'High Priority'}
+          </span>
           <div className="text-2xl font-black text-purple-700 mt-1">{summary.highPriorityCount ?? 0}</div>
-          <span className="text-[11px] text-purple-600/80 mt-0.5 block">Urgency Score ≥ 80</span>
+          <span className="text-[11px] text-purple-600/80 mt-0.5 block">{isKannada ? 'ಅಂಕ ≥ 80' : 'Urgency Score ≥ 80'}</span>
         </div>
       </div>
 
@@ -165,9 +183,9 @@ export default function AdminDashboard() {
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Activity className="w-5 h-5 text-agri-600" />
-            <h2 className="text-lg font-bold text-slate-900">Algorithmic Analytics & Demand Visuals</h2>
+            <h2 className="text-lg font-bold text-slate-900">{t('admin.analyticsTitle')}</h2>
           </div>
-          <span className="text-xs text-slate-500">Live aggregated metrics</span>
+          <span className="text-xs text-slate-500">{isKannada ? 'ನೈಜ-ಸಮಯದ ಒಟ್ಟು ಅಂಕಿಅಂಶಗಳು' : 'Live aggregated metrics'}</span>
         </div>
 
         <AnalyticsCharts charts={charts} />
@@ -183,10 +201,10 @@ export default function AdminDashboard() {
             <Clock className="w-5 h-5" />
           </div>
           <h3 className="font-bold text-sm text-slate-900 group-hover:text-agri-600 transition">
-            Master Timeline Schedule →
+            {isKannada ? 'ಮಾಸ್ಟರ್ ವೇಳಾಪಟ್ಟಿ →' : 'Master Timeline Schedule →'}
           </h3>
           <p className="text-xs text-slate-500">
-            14-hour operational timeline (06:00 – 20:00) with logistics buffers and travel margins.
+            {isKannada ? '14-ಗಂಟೆಗಳ ಕಾರ್ಯಾಚರಣಾ ವೇಳಾಪಟ್ಟಿ (06:00 – 20:00) ಲಾಜಿಸ್ಟಿಕ್ಸ್ ಮತ್ತು ಪ್ರಯಾಣ ಬಫರ್‌ನೊಂದಿಗೆ.' : '14-hour operational timeline (06:00 – 20:00) with logistics buffers and travel margins.'}
           </p>
         </Link>
 
@@ -198,10 +216,10 @@ export default function AdminDashboard() {
             <AlertTriangle className="w-5 h-5" />
           </div>
           <h3 className="font-bold text-sm text-slate-900 group-hover:text-rose-600 transition">
-            Conflict Resolution Center →
+            {isKannada ? 'ಸಂಘರ್ಷ ಪರಿಹಾರ ಕೇಂದ್ರ →' : 'Conflict Resolution Center →'}
           </h3>
           <p className="text-xs text-slate-500">
-            Strict double-booking prevention engine and feasible alternative recommendations.
+            {isKannada ? 'ಡಬಲ್-ಬುಕಿಂಗ್ ತಡೆಗಟ್ಟುವಿಕೆ ಮತ್ತು ಪರ್ಯಾಯ ಯಂತ್ರಗಳ ಶಿಫಾರಸು ಎಂಜಿನ್.' : 'Strict double-booking prevention engine and feasible alternative recommendations.'}
           </p>
         </Link>
 
@@ -213,10 +231,10 @@ export default function AdminDashboard() {
             <Wrench className="w-5 h-5" />
           </div>
           <h3 className="font-bold text-sm text-slate-900 group-hover:text-amber-600 transition">
-            Disruption Simulator →
+            {isKannada ? 'ಅಡಚಣೆ ಸಿಮ್ಯುಲೇಟರ್ →' : 'Disruption Simulator →'}
           </h3>
           <p className="text-xs text-slate-500">
-            Simulate sudden equipment breakdowns, flash storms, and last-minute cancellations.
+            {isKannada ? 'ಯಂತ್ರಗಳ ಹಠಾತ್ ಸ್ಥಗಿತ, ಮಳೆ ಬಿರುಗಾಳಿ ಮತ್ತು ರದ್ದತಿಗಳನ್ನು ಪರೀಕ್ಷಿಸಿ.' : 'Simulate sudden equipment breakdowns, flash storms, and last-minute cancellations.'}
           </p>
         </Link>
 
@@ -228,10 +246,10 @@ export default function AdminDashboard() {
             <Tractor className="w-5 h-5" />
           </div>
           <h3 className="font-bold text-sm text-slate-900 group-hover:text-sky-600 transition">
-            Geospatial Fleet Map →
+            {isKannada ? 'ಜಿಯೋಸ್ಪೇಷಿಯಲ್ ನಕ್ಷೆ →' : 'Geospatial Fleet Map →'}
           </h3>
           <p className="text-xs text-slate-500">
-            Regional Leaflet map of all farmer parcels, equipment depots, and live operating statuses.
+            {isKannada ? 'ರೈತರ ಜಮೀನುಗಳು, ಉಪಕರಣ ಕೇಂದ್ರಗಳು ಮತ್ತು ಲೈವ್ ಕಾರ್ಯಾಚರಣೆ ನಕ್ಷೆ.' : 'Regional Leaflet map of all farmer parcels, equipment depots, and live operating statuses.'}
           </p>
         </Link>
       </div>
@@ -241,16 +259,16 @@ export default function AdminDashboard() {
         <div className="flex items-center justify-between pb-3 border-b border-slate-100">
           <h3 className="font-bold text-slate-900 text-sm flex items-center gap-2">
             <AlertTriangle className="w-4 h-4 text-amber-500" />
-            Recent Disruption & Dynamic Reallocation Events
+            {isKannada ? 'ಇತ್ತೀಚಿನ ಅಡಚಣೆ ಮತ್ತು ಮರುಹಂಚಿಕೆ ಘಟನೆಗಳು' : 'Recent Disruption & Dynamic Reallocation Events'}
           </h3>
           <Link to="/admin/disruptions" className="text-xs text-agri-600 font-semibold hover:underline">
-            Open Disruption Center
+            {isKannada ? 'ಅಡಚಣೆ ಕೇಂದ್ರ ತೆರೆಯಿರಿ' : 'Open Disruption Center'}
           </Link>
         </div>
 
         {disruptions.length === 0 ? (
           <div className="text-center py-6 text-slate-400 text-xs">
-            No disruption incidents recorded. System running stably.
+            {isKannada ? 'ಯಾವುದೇ ಅಡಚಣೆ ದಾಖಲಾಗಿಲ್ಲ. ವ್ಯವಸ್ಥೆ ಸುಸ್ಥಿತಿಯಲ್ಲಿದೆ.' : 'No disruption incidents recorded. System running stably.'}
           </div>
         ) : (
           <div className="space-y-3">

@@ -58,6 +58,7 @@ model Resource {
   owner             User         @relation(fields: [ownerId], references: [id], onDelete: Cascade)
   bookings          Booking[]
   disruptions       Disruption[]
+  tractorLocations  TractorLocation[]
   createdAt         DateTime     @default(now())
   updatedAt         DateTime     @updatedAt
 
@@ -105,6 +106,7 @@ model Booking {
   allocationExplanation String?         @db.Text
   request               ResourceRequest @relation(fields: [requestId], references: [id], onDelete: Cascade)
   resource              Resource        @relation(fields: [resourceId], references: [id], onDelete: Cascade)
+  tracking              TractorLocation?
   createdAt             DateTime        @default(now())
   updatedAt             DateTime        @updatedAt
 
@@ -159,3 +161,30 @@ model Notification {
 
   @@index([userId])
 }
+
+model TractorLocation {
+  id                Int       @id @default(autoincrement())
+  bookingId         Int       @unique
+  resourceId        Int
+  latitude          Float
+  longitude         Float
+  status            String    @default("ASSIGNED") // ASSIGNED, LOCATION_AVAILABLE, ON_THE_WAY, REACHED_LAND, OTP_VERIFIED, WORK_STARTED, WORK_IN_PROGRESS, WORK_COMPLETED, RETURNING, COMPLETED
+  otp               String?   @default("1234")
+  isOtpVerified     Boolean   @default(false)
+  distanceRemaining Float?    // in kilometers
+  estimatedMinutes  Int?      // ETA in minutes
+  heading           Float?    @default(0) // heading in degrees (0-360)
+  speed             Float?    @default(0) // speed in km/h
+  arrivedAt         DateTime?
+  startedAt         DateTime?
+  completedAt       DateTime?
+  booking           Booking   @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  resource          Resource  @relation(fields: [resourceId], references: [id], onDelete: Cascade)
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  @@index([resourceId])
+  @@index([bookingId])
+  @@index([status])
+}
+

@@ -1,10 +1,13 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { useLanguage } from '../context/LanguageContext';
+import LanguageSwitcher from '../components/LanguageSwitcher';
 import { Tractor, ArrowRight, ShieldCheck, AlertCircle } from 'lucide-react';
 
 export default function LoginPage() {
   const { login, quickDemoLogin } = useAuth();
+  const { t } = useLanguage();
   const navigate = useNavigate();
 
   const [email, setEmail] = useState('');
@@ -46,19 +49,23 @@ export default function LoginPage() {
   return (
     <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
       <div className="max-w-md w-full bg-white rounded-2xl shadow-xl border border-slate-200 p-8 space-y-6">
+        <div className="flex justify-end">
+          <LanguageSwitcher variant="navbar" />
+        </div>
+
         <div className="text-center space-y-1.5">
           <div className="w-12 h-12 rounded-xl bg-agri-600 text-white flex items-center justify-center mx-auto shadow-md shadow-agri-600/30">
             <Tractor className="w-7 h-7" />
           </div>
-          <h2 className="text-2xl font-black text-slate-900 tracking-tight">Sign In to FarmGrid</h2>
-          <p className="text-xs text-slate-500">Access your coordinated agricultural resource terminal</p>
+          <h2 className="text-2xl font-black text-slate-900 tracking-tight">{t('auth.signInTitle')}</h2>
+          <p className="text-xs text-slate-500">{t('auth.signInSubtitle')}</p>
         </div>
 
         {/* 1-Click Quick Demo Login Box */}
         <div className="bg-slate-50 border border-slate-200 rounded-xl p-4">
           <div className="text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-2.5 flex items-center gap-1.5">
             <ShieldCheck className="w-3.5 h-3.5 text-agri-600" />
-            Hackathon One-Click Demo Access
+            {t('auth.demoBoxTitle')}
           </div>
           <div className="grid grid-cols-3 gap-2">
             <button
@@ -66,21 +73,21 @@ export default function LoginPage() {
               onClick={() => handleDemo('farmer')}
               className="px-2.5 py-2 rounded-lg bg-white hover:bg-emerald-50 border border-slate-200 hover:border-emerald-300 text-xs font-semibold text-slate-800 transition text-center shadow-xs"
             >
-              👨‍🌾 Farmer
+              👨‍🌾 {t('nav.farmerRole')}
             </button>
             <button
               type="button"
               onClick={() => handleDemo('owner')}
               className="px-2.5 py-2 rounded-lg bg-white hover:bg-emerald-50 border border-slate-200 hover:border-emerald-300 text-xs font-semibold text-slate-800 transition text-center shadow-xs"
             >
-              🚜 Owner
+              🚜 {t('nav.ownerRole')}
             </button>
             <button
               type="button"
               onClick={() => handleDemo('admin')}
               className="px-2.5 py-2 rounded-lg bg-white hover:bg-emerald-50 border border-slate-200 hover:border-emerald-300 text-xs font-semibold text-slate-800 transition text-center shadow-xs"
             >
-              👑 Admin
+              👑 {t('nav.adminRole')}
             </button>
           </div>
         </div>
@@ -94,7 +101,7 @@ export default function LoginPage() {
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-xs font-semibold text-slate-700 mb-1">Email Address</label>
+            <label className="block text-xs font-semibold text-slate-700 mb-1">{t('auth.emailLabel')}</label>
             <input
               type="email"
               required
@@ -106,7 +113,7 @@ export default function LoginPage() {
           </div>
 
           <div>
-            <label className="block text-xs font-semibold text-slate-700 mb-1">Password</label>
+            <label className="block text-xs font-semibold text-slate-700 mb-1">{t('auth.passwordLabel')}</label>
             <input
               type="password"
               required
@@ -122,15 +129,15 @@ export default function LoginPage() {
             disabled={loading}
             className="w-full py-2.5 px-4 bg-agri-600 hover:bg-agri-700 text-white font-bold text-sm rounded-lg shadow-sm transition flex items-center justify-center gap-2 disabled:opacity-50"
           >
-            {loading ? 'Authenticating...' : 'Sign In'}
+            {loading ? t('auth.signingIn') : t('auth.signInBtn')}
             <ArrowRight className="w-4 h-4" />
           </button>
         </form>
 
         <div className="text-center text-xs text-slate-500">
-          Need a new account?{' '}
+          {t('auth.noAccount')}{' '}
           <Link to="/register" className="text-agri-700 font-bold hover:underline">
-            Register here
+            {t('auth.registerHere')}
           </Link>
         </div>
       </div>

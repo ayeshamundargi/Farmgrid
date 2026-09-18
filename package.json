@@ -9,9 +9,10 @@
     "dev:server": "npm --prefix server run dev",
     "dev:client": "npm --prefix client run dev",
     "seed": "npm --prefix server run seed",
-    "test": "node server/tests/algorithms.test.js && node server/tests/api.test.js",
+    "test": "node server/tests/algorithms.test.js && node server/tests/api.test.js && node server/tests/tracking.test.js",
     "test:algorithms": "node server/tests/algorithms.test.js",
     "test:api": "node server/tests/api.test.js",
+    "test:tracking": "node server/tests/tracking.test.js",
     "build": "npm --prefix client run build"
   },
   "devDependencies": {

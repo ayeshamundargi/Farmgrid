@@ -371,7 +371,15 @@ async function simulateDisruption(req, res, next) {
         include: { bookings: { where: { status: 'ACTIVE' }, include: { request: { include: { farmer: true } } } } }
       });
 
+      if (!beforeResource) {
+        return res.status(404).json({
+          success: false,
+          message: `Target resource #${targetResourceId} not found.`
+        });
+      }
+
       // Create disruption record
+
       const disruption = await prisma.disruption.create({
         data: {
           resourceId: parseInt(targetResourceId),
@@ -517,7 +525,22 @@ async function executeMasterReallocation() {
           allocationExplanation: item.priority.explanation
         }
       });
+    } else {
+      await prisma.booking.update({
+        where: { id: existing.id },
+        data: {
+          resourceId: item.resource.id,
+          startTime: item.slot.startTime,
+          endTime: item.slot.endTime,
+          bufferBeforeMinutes: item.slot.bufferBeforeMinutes,
+          bufferAfterMinutes: item.slot.bufferAfterMinutes,
+          travelMinutes: item.slot.travelMinutes,
+          status: 'ACTIVE',
+          allocationExplanation: item.priority.explanation
+        }
+      });
     }
+
 
     await prisma.resourceRequest.update({
       where: { id: item.request.id },
