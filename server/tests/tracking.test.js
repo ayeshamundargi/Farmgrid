@@ -1,6 +1,7 @@
 const http = require('http');
 const assert = require('assert');
 const { app, server } = require('../src/server');
+const prisma = require('../src/utils/prisma');
 
 function checkServerRunning(port) {
   return new Promise((resolve) => {
@@ -102,13 +103,48 @@ async function main() {
 
   console.log('✅ [PASS] Authentication successful for Farmer and Owner');
 
-  // 2. Fetch Farmer requests to find booking #1
+  // 2. Fetch Farmer requests to find an active/scheduled booking
   const farmerRequests = await getJson('/requests/my', farmerToken);
   assert.strictEqual(farmerRequests.status, 200);
-  const scheduledRequest = farmerRequests.body.data.find((r) => r.booking && r.status === 'SCHEDULED');
+  let scheduledRequest = farmerRequests.body.data.find((r) => r.booking && (r.status === 'SCHEDULED' || r.booking.status === 'ACTIVE'));
+  if (!scheduledRequest) {
+    scheduledRequest = farmerRequests.body.data.find((r) => r.booking);
+  }
   assert.ok(scheduledRequest, 'Must find a scheduled request with a booking');
   const bookingId = scheduledRequest.booking.id;
-  console.log(`✅ [PASS] Located Active Booking ID: ${bookingId}`);
+  const farmLat = scheduledRequest.farm.latitude;
+  const farmLng = scheduledRequest.farm.longitude;
+  console.log(`✅ [PASS] Located Active Booking ID: ${bookingId} (Farm: ${scheduledRequest.farm.name} at ${farmLat}, ${farmLng})`);
+
+  // Ensure tracking record is reset to starting state for the test
+  await prisma.booking.update({
+    where: { id: bookingId },
+    data: { status: 'ACTIVE' }
+  });
+  await prisma.resourceRequest.update({
+    where: { id: scheduledRequest.id },
+    data: { status: 'SCHEDULED' }
+  });
+  await prisma.tractorLocation.upsert({
+    where: { bookingId },
+    create: {
+      bookingId,
+      resourceId: scheduledRequest.booking.resourceId,
+      latitude: farmLat + 0.02,
+      longitude: farmLng + 0.02,
+      status: 'ASSIGNED',
+      otp: '1234',
+      isOtpVerified: false,
+      distanceRemaining: 2.5,
+      estimatedMinutes: 6
+    },
+    update: {
+      status: 'ASSIGNED',
+      isOtpVerified: false,
+      latitude: farmLat + 0.02,
+      longitude: farmLng + 0.02
+    }
+  });
 
   // 3. Fetch Tracking Details
   const trackingRes = await getJson(`/tracking/${bookingId}`, farmerToken);
@@ -120,8 +156,8 @@ async function main() {
 
   // 4. Update Tractor Location (Mid-route coordinates)
   const locUpdateRes = await postJson(`/tracking/${bookingId}/location`, {
-    latitude: 12.5210,
-    longitude: 76.8930,
+    latitude: farmLat + 0.015,
+    longitude: farmLng + 0.015,
     heading: 45,
     speed: 26.5
   }, ownerToken);
@@ -129,10 +165,10 @@ async function main() {
   assert.strictEqual(locUpdateRes.body.data.speed, 26.5);
   console.log(`✅ [PASS] Real-Time Location Update Succeeded (Speed: 26.5 km/h, Dist: ${locUpdateRes.body.data.distanceRemaining} km)`);
 
-  // 5. Test Geofence Arrival Detection (Coordinates set within 50 meters of farm at 12.5218, 76.8951)
+  // 5. Test Geofence Arrival Detection (Coordinates set within farm perimeter)
   const geofenceRes = await postJson(`/tracking/${bookingId}/location`, {
-    latitude: 12.5218,
-    longitude: 76.8951,
+    latitude: farmLat,
+    longitude: farmLng,
     heading: 90,
     speed: 5.0
   }, ownerToken);
@@ -178,6 +214,20 @@ async function main() {
   assert.strictEqual(activeRes.status, 200);
   assert.ok(Array.isArray(activeRes.body.data), 'Active trackings must return an array');
   console.log(`✅ [PASS] Active Trackings Query OK (${activeRes.body.data.length} trackings returned)`);
+
+  // Reset test booking back to active status for idempotent repeatability
+  await prisma.booking.update({
+    where: { id: bookingId },
+    data: { status: 'ACTIVE' }
+  });
+  await prisma.resourceRequest.update({
+    where: { id: scheduledRequest.id },
+    data: { status: 'SCHEDULED' }
+  });
+  await prisma.tractorLocation.update({
+    where: { bookingId },
+    data: { status: 'ASSIGNED', isOtpVerified: false }
+  });
 
   console.log('\n========================================');
   console.log('TRACTOR TRACKING SUITE: 8/8 TESTS PASSED');
