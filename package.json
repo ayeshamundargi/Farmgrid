@@ -15,7 +15,7 @@
     "test:tracking": "node server/tests/tracking.test.js",
     "test:e2e": "node server/tests/e2e_verification.js",
     "build": "npm --prefix client install && npm --prefix client run build && node -e \"require('fs').cpSync('client/dist', 'dist', {recursive:true})\"",
-    "vercel-build": "npm --prefix server install && npm --prefix server run prisma:generate && npm --prefix client install && npm --prefix client run build && node -e \"require('fs').cpSync('client/dist', 'dist', {recursive:true})\""
+    "vercel-build": "npm --prefix server install --include=dev && npm --prefix server run prisma:generate && npm --prefix client install --include=dev && npm --prefix client run build && node -e \"require('fs').cpSync('client/dist', 'dist', {recursive:true})\""
   },
   "devDependencies": {
     "concurrently": "^9.1.2",
