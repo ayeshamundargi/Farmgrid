@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
@@ -23,11 +23,22 @@ export default function LandingPage() {
   const { t, isKannada } = useLanguage();
   const navigate = useNavigate();
 
+  const [demoError, setDemoError] = useState(null);
+  const [demoLoading, setDemoLoading] = useState(false);
+
   const handleDemoStart = async (role) => {
-    await quickDemoLogin(role);
-    if (role === 'farmer') navigate('/farmer/dashboard');
-    else if (role === 'owner') navigate('/owner/dashboard');
-    else if (role === 'admin') navigate('/admin/dashboard');
+    setDemoError(null);
+    setDemoLoading(true);
+    try {
+      const user = await quickDemoLogin(role);
+      if (role === 'farmer') navigate('/farmer/dashboard');
+      else if (role === 'owner') navigate('/owner/dashboard');
+      else if (role === 'admin') navigate('/admin/dashboard');
+    } catch (err) {
+      setDemoError(err.response?.data?.message || 'Login failed. Please ensure the backend database is connected and seeded.');
+    } finally {
+      setDemoLoading(false);
+    }
   };
 
   return (
@@ -75,6 +86,13 @@ export default function LandingPage() {
               <ChevronRight className="w-4 h-4 text-agri-400" />
             </button>
           </div>
+
+          {demoError && (
+            <div className="p-3 rounded-xl bg-rose-950/80 border border-rose-500/50 text-xs text-rose-200 flex items-center justify-center gap-2 max-w-xl mx-auto shadow-lg backdrop-blur-xs">
+              <AlertTriangle className="w-4 h-4 text-rose-400 shrink-0" />
+              <span>{demoError}</span>
+            </div>
+          )}
 
           {/* Instant 1-Click Role Login Bar */}
           <div className="pt-8 border-t border-white/10 max-w-xl mx-auto">

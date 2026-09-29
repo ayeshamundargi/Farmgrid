@@ -14,10 +14,12 @@
     "test:api": "node server/tests/api.test.js",
     "test:tracking": "node server/tests/tracking.test.js",
     "test:e2e": "node server/tests/e2e_verification.js",
-    "build": "npm --prefix client install && npm --prefix client run build"
+    "build": "npm --prefix client install && npm --prefix client run build && node -e \"require('fs').cpSync('client/dist', 'dist', {recursive:true})\"",
+    "vercel-build": "npm --prefix server install && npm --prefix server run prisma:generate && npm --prefix client install && npm --prefix client run build && node -e \"require('fs').cpSync('client/dist', 'dist', {recursive:true})\""
   },
   "devDependencies": {
-    "concurrently": "^9.1.2"
+    "concurrently": "^9.1.2",
+    "prisma": "^5.22.0"
   },
   "keywords": [
     "agriculture",
@@ -27,5 +29,15 @@
     "hackathon"
   ],
   "author": "FarmGrid Team",
-  "license": "MIT"
+  "license": "MIT",
+  "dependencies": {
+    "@prisma/client": "^5.22.0",
+    "bcryptjs": "^2.4.3",
+    "cors": "^2.8.6",
+    "dotenv": "^16.6.1",
+    "express": "^4.22.3",
+    "express-validator": "^7.3.2",
+    "jsonwebtoken": "^9.0.3",
+    "socket.io": "^4.8.4"
+  }
 }

@@ -40,7 +40,7 @@ export default function LoginPage() {
       else if (user.role === 'OWNER') navigate('/owner/dashboard');
       else if (user.role === 'ADMIN') navigate('/admin/dashboard');
     } catch (err) {
-      setError('Failed to log in with demo account.');
+      setError(err.response?.data?.message || 'Failed to log in with demo account. Ensure the database is connected and seeded.');
     } finally {
       setLoading(false);
     }
