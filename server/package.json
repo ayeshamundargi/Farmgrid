@@ -4,6 +4,8 @@
   "description": "FarmGrid Backend - Allocation Engine and REST API",
   "main": "src/server.js",
   "scripts": {
+    "postinstall": "prisma generate",
+    "build": "prisma generate",
     "dev": "nodemon src/server.js",
     "start": "node src/server.js",
     "prisma:generate": "prisma generate",
