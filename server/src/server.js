@@ -48,7 +48,7 @@ const io = new Server(server, {
 initSocket(io);
 
 // Health check
-app.get('/api/health', (req, res) => {
+app.get(['/api/health', '/health'], (req, res) => {
   res.json({
     status: 'UP',
     name: 'FarmGrid API',
@@ -56,13 +56,24 @@ app.get('/api/health', (req, res) => {
   });
 });
 
-// Mount Routes
+// Mount Routes (supporting both /api and root prefixes for Vercel Services compatibility)
 app.use('/api/auth', authRoutes);
+app.use('/auth', authRoutes);
+
 app.use('/api', farmerRoutes);
+app.use('/', farmerRoutes);
+
 app.use('/api', ownerRoutes);
+app.use('/', ownerRoutes);
+
 app.use('/api/resources', resourceRoutes);
+app.use('/resources', resourceRoutes);
+
 app.use('/api/admin', adminRoutes);
+app.use('/admin', adminRoutes);
+
 app.use('/api', trackingRoutes);
+app.use('/', trackingRoutes);
 
 // 404 handler
 app.use('*', (req, res) => {
