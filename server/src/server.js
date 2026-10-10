@@ -96,5 +96,7 @@ if (require.main === module) {
   });
 }
 
-module.exports = { app, server };
+app.app = app;
+app.server = server;
+module.exports = app;
 
